@@ -65,6 +65,11 @@ WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.
 # Same as above but dpo
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml dpo.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16
 
+# Fix
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16 --num_train_epochs 1
+
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 2 --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
 """
 from dataclasses import dataclass, field
 from typing import Optional
