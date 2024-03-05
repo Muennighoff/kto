@@ -68,8 +68,15 @@ WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml dpo.
 # Fix
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16 --num_train_epochs 1
-
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 2 --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
+
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir m7-1ep-kto --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir m7-1ep-kto --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
+
+### KTO ###
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir /data/niklas/m7-1ep-kto-v3 --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
+### DPO ###
+WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml dpo.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir /data/niklas/m7-1ep-dpo-v3 --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
 """
 from dataclasses import dataclass, field
 from typing import Optional
@@ -148,15 +155,11 @@ def get_ultrabin(split: str, sanity_check: bool = False, silent: bool = False, c
     }
     for sample in dataset:
         prompt = sample["prompt"]
-        #flat_data["prompt"].append(sample["prompt"])
         flat_data["prompt"].append(f"<|user|>\n{prompt}\n<|assistant|>\n")
-        #flat_data["completion"].append(sample["chosen"][1]["content"])
-        flat_data["completion"].append(sample["chosen"][1]["content"] + "</s>")
+        flat_data["completion"].append(sample["chosen"][1]["content"])
         flat_data["label"].append(True)
-        #flat_data["prompt"].append(sample["prompt"])
         flat_data["prompt"].append(f"<|user|>\n{prompt}\n<|assistant|>\n")
-        #flat_data["completion"].append(sample["rejected"][1]["content"])
-        flat_data["completion"].append(sample["rejected"][1]["content"] + "</s>")
+        flat_data["completion"].append(sample["rejected"][1]["content"])
         flat_data["label"].append(False)
 
     return dataset.from_dict(flat_data)

@@ -122,8 +122,8 @@ def get_ultrabin(split: str, sanity_check: bool = False, silent: bool = False, c
     def split_prompt_and_responses(sample) -> Dict[str, str]:
         return {
             "prompt": f"<|user|>\n{sample['prompt']}\n<|assistant|>\n",
-            "chosen": sample["chosen"][1]["content"] + "</s>",
-            "rejected": sample["rejected"][1]["content"] + "</s>",
+            "chosen": sample["chosen"][1]["content"],
+            "rejected": sample["rejected"][1]["content"],
         }
 
     return dataset.map(split_prompt_and_responses)
