@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Comparison:
+Baseline Comparison:
 ### KTO ###
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir /data/niklas/m7-1ep-kto-v3 --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
 ### DPO ###
@@ -22,8 +22,6 @@ WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml dp
 ### GRIT KTO ###
 # M7
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path GritLM/GritLM-7B --output_dir /data/niklas/GritLM-7B-KTO --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check True --num_train_epochs 1
-# M7 PEFT
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path GritLM/GritLM-7B --output_dir /data/niklas/GritLM-7B-KTO-LoRA --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16
 # M8x7
 # ZeRO2
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path GritLM/GritLM-8x7B --output_dir /data/niklas/GritLM-8x7B-KTO --report_to "wandb" --per_device_train_batch_size 1 --gradient_accumulation_steps 4 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check True --num_train_epochs 1
