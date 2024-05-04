@@ -146,7 +146,7 @@ if __name__ == "__main__":
     quantization_config = get_quantization_config(model_config)
     model_kwargs = dict(
         revision=model_config.model_revision,
-        trust_remote_code=model_config.trust_remote_code,
+        trust_remote_code=True,
         attn_implementation=model_config.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
