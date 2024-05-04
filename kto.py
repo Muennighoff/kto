@@ -13,66 +13,7 @@
 # limitations under the License.
 
 """
-Run the KTO training script with the following command with some example arguments:
-
-python examples/scripts/kto.py \
-    --model_name_or_path "gpt2" \
-    --per_device_train_batch_size 8 \
-    --gradient_accumulation_steps 2 \
-    --learning_rate 1e-4 \
-    --max_steps 1000 \
-    --report_to "wandb" \
-    --gradient_checkpointing True  \
-    --output_dir="./test" \
-    --use_peft True \
-    --lora_r 64 \
-    --lora_alpha 16 \
-    --evaluation_strategy "steps" \
-    --logging_first_step True \
-    --logging_steps 10 \
-    --eval_steps 500
-
-
-# 1 GPU test
-WANDB_PROJECT=gritkto python kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 1 --gradient_accumulation_steps 1
-# 1 GPU test accelerate
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_1gpus_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 1 --gradient_accumulation_steps 1
-# 8 GPUs test -> times out
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusfsdp_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 1 --gradient_accumulation_steps 1
-# 8 GPUs test with SHARD_GRAD_OP -> increase bs (1->4)
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdp_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --logging_steps 1
-# total bs 32 -> fails with _saved_grad_shard error 
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusfsdp_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 1 --gradient_accumulation_steps 8 --optim rmsprop --learning_rate 5e-07 --beta 0.1
-
-# Works but lots of nans
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusfsdp_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 2 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1
-
-# 8 GPUs test deepspeed -> Fails with https://github.com/microsoft/DeepSpeed/issues/1960
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --bf16 --logging_steps 1
-# ZeRO2 -> times out -> w/ bigger bs works (1->4)
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --bf16 --logging_steps 1
-# Real -> Works
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
-
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
-CUDA_VISIBLE_DEVICES=0,1,2,3 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsgas2.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 2 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
-
-# Works but eventually becomes nan
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False
-# Try w/ peft
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16
-
-# Same as above but dpo
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml dpo.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16
-
-# Fix
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir test --report_to "wandb" --per_device_train_batch_size 6 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --use_peft True --lora_r 64 --lora_alpha 16 --num_train_epochs 1
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path openaccess-ai-collective/tiny-mistral --output_dir test --report_to "wandb" --per_device_train_batch_size 2 --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16
-
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusds_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir m7-1ep-kto --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
-WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir m7-1ep-kto --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
-
+Comparison:
 ### KTO ###
 WANDB_PROJECT=gritkto accelerate launch --config_file=config_8gpusdsz2_m7.yml kto.py --model_name_or_path HuggingFaceH4/mistral-7b-sft-beta --output_dir /data/niklas/m7-1ep-kto-v3 --report_to "wandb" --per_device_train_batch_size 4 --gradient_accumulation_steps 1 --optim rmsprop --learning_rate 5e-07 --beta 0.1 --logging_steps 1 --bf16 --sanity_check False --num_train_epochs 1
 ### DPO ###
